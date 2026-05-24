@@ -28,35 +28,49 @@ def handle_message(data):
 # Handle file, picture, audio, and folder-file uploads
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        return {'error': 'No file'}, 400
-    
-    file = request.files['file']
-    user = request.form.get('user', 'Anonymous')
-    file_type = request.form.get('type', 'file')
-    
-    if file.filename == '':
-        return {'error': 'No file selected'}, 400
-    
-    if file:
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+    try:
+        if 'file' not in request.files:
+            print("❌ Upload Failed: No file part in request")
+            return {'error': 'No file'}, 400
         
-        file_url = f"/uploads/{filename}"
+        file = request.files['file']
+        user = request.form.get('user', 'Anonymous')
+        file_type = request.form.get('type', 'file')
         
-        payload = {
-            'user': user,
-            'file_url': file_url,
-            'filename': filename,
-            'type': file_type
-        }
-        socketio.emit('receive_file', payload)
-        return {'success': True}
+        if file.filename == '':
+            print("❌ Upload Failed: Empty filename")
+            return {'error': 'No file selected'}, 400
+        
+        if file:
+            filename = secure_filename(file.filename)
+            
+            # Resolve directory paths clearly for the Render Linux environment
+            upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+                
+            filepath = os.path.join(upload_dir, filename)
+            file.save(filepath)
+            
+            file_url = f"/uploads/{filename}"
+            print(f"✅ Success! File saved to: {filepath}")
+            
+            payload = {
+                'user': user,
+                'file_url': file_url,
+                'filename': filename,
+                'type': file_type
+            }
+            socketio.emit('receive_file', payload)
+            return {'success': True}
+            
+    except Exception as e:
+        print(f"❌ CRITICAL UPLOAD ERROR: {str(e)}")
+        return {'error': str(e)}, 500
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(os.path.join(app.root_path, app.config['UPLOAD_FOLDER']), filename)
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
