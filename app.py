@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 from flask import Flask, render_template, request, send_from_directory
 from flask_socketio import SocketIO, emit
@@ -36,7 +39,6 @@ def upload_file():
         return {'error': 'No file selected'}, 400
     
     if file:
-        # secure_filename cleans up special characters or paths
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
@@ -57,5 +59,4 @@ def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
-    # host='0.0.0.0' allows any device on your Wi-Fi to connect
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
