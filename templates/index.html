@@ -22,7 +22,7 @@
             max-width: 75%;
             width: fit-content;
         }
-        /* Style adaptations for themes */
+        /* Theme specific style overrides */
         [data-bs-theme="light"] .message { background-color: #f1f0f0; color: #000; }
         [data-bs-theme="dark"] .message { background-color: #2b2b2b; color: #fff; }
         [data-bs-theme="light"] #chat-window { background-color: #fff; }
@@ -64,7 +64,7 @@
     </div>
 
     <script>
-        // 🌓 Theme Toggle Logic
+        // 🌓 Clean Dark / Light Mode Toggle Script
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const themeText = document.getElementById('theme-text');
@@ -83,11 +83,11 @@
             }
         });
 
-        // 🔌 Connect Socket.IO to your server
+        // 🔌 Standard WebSocket Communication Logic
         const socket = io();
         const chatWindow = document.getElementById('chat-window');
 
-        // Render standard incoming texts
+        // Handle Incoming Text Broadcasts
         socket.on('receive_message', (data) => {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message shadow-sm';
@@ -96,7 +96,7 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // Render file attachment uploads
+        // Handle Incoming File Upload Broadcasts
         socket.on('receive_file', (data) => {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message shadow-sm';
@@ -113,7 +113,7 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // Click Send Message Action
+        // Text Dispatch Triggers
         document.getElementById('send-btn').addEventListener('click', sendMessage);
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
@@ -128,7 +128,7 @@
             }
         }
 
-        // File/Folder Multi-upload submit action
+        // File Multi-part Form Submission Payload
         document.getElementById('upload-btn').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
             const user = document.getElementById('username').value || 'Anonymous';
@@ -139,7 +139,6 @@
             formData.append('file', file);
             formData.append('user', user);
             
-            // Deduce broad media groupings
             let detectedType = 'file';
             if (file.type.startsWith('image/')) detectedType = 'picture';
             if (file.type.startsWith('audio/')) detectedType = 'audio';
