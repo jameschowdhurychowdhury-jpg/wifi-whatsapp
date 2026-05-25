@@ -14,7 +14,8 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+# Added explicit async mode and cors parameters to stabilize live servers
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)
 
 @app.route('/')
 def index():
@@ -23,6 +24,7 @@ def index():
 # Listen for incoming text messages
 @socketio.on('send_message')
 def handle_message(data):
+    print(f"📥 Received Text: {data}")
     emit('receive_message', data, broadcast=True)
 
 # Handle file, picture, audio, and folder-file uploads
@@ -44,7 +46,6 @@ def upload_file():
         if file:
             filename = secure_filename(file.filename)
             
-            # Resolve directory paths clearly for the Render Linux environment
             upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
             if not os.path.exists(upload_dir):
                 os.makedirs(upload_dir)

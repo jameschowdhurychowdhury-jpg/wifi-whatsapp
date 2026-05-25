@@ -22,7 +22,7 @@
             max-width: 75%;
             width: fit-content;
         }
-        /* Theme specific style overrides */
+        /* Theme adaptations */
         [data-bs-theme="light"] .message { background-color: #f1f0f0; color: #000; }
         [data-bs-theme="dark"] .message { background-color: #2b2b2b; color: #fff; }
         [data-bs-theme="light"] #chat-window { background-color: #fff; }
@@ -64,7 +64,7 @@
     </div>
 
     <script>
-        // 🌓 Clean Dark / Light Mode Toggle Script
+        // 🌓 Theme Selection Handling
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const themeText = document.getElementById('theme-text');
@@ -83,11 +83,11 @@
             }
         });
 
-        // 🔌 Standard WebSocket Communication Logic
-        const socket = io();
+        // 🔌 Establish socket connection specifying fallback transport models
+        const socket = io({ transports: ['websocket', 'polling'] });
         const chatWindow = document.getElementById('chat-window');
 
-        // Handle Incoming Text Broadcasts
+        // Text Processing Rule
         socket.on('receive_message', (data) => {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message shadow-sm';
@@ -96,7 +96,7 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // Handle Incoming File Upload Broadcasts
+        // Upload Tracking Rule
         socket.on('receive_file', (data) => {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message shadow-sm';
@@ -113,7 +113,7 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // Text Dispatch Triggers
+        // EventListeners for Messaging
         document.getElementById('send-btn').addEventListener('click', sendMessage);
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
@@ -128,7 +128,7 @@
             }
         }
 
-        // File Multi-part Form Submission Payload
+        // File submit handling
         document.getElementById('upload-btn').addEventListener('click', () => {
             const fileInput = document.getElementById('file-input');
             const user = document.getElementById('username').value || 'Anonymous';
