@@ -10,42 +10,39 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'home_wifi_secret_key'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
-# Create uploads folder if it doesn't exist
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Added explicit async mode and cors parameters to stabilize live servers
+# Added explicit cors and engine configurations for Render stability
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Listen for incoming text messages
+# FIXED: Standardized payload keys to always use 'message'
 @socketio.on('send_message')
 def handle_message(data):
     print(f"📥 Received Text: {data}")
-    emit('receive_message', data, broadcast=True)
+    emit('receive_message', {
+        'user': data.get('user', 'Anonymous'),
+        'message': data.get('message', '')
+    }, broadcast=True)
 
-# Handle file, picture, audio, and folder-file uploads
 @app.route('/upload', methods=['POST'])
 def upload_file():
     try:
         if 'file' not in request.files:
-            print("❌ Upload Failed: No file part in request")
             return {'error': 'No file'}, 400
         
         file = request.files['file']
         user = request.form.get('user', 'Anonymous')
-        file_type = request.form.get('type', 'file')
         
         if file.filename == '':
-            print("❌ Upload Failed: Empty filename")
             return {'error': 'No file selected'}, 400
         
         if file:
             filename = secure_filename(file.filename)
-            
             upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
             if not os.path.exists(upload_dir):
                 os.makedirs(upload_dir)
@@ -54,8 +51,13 @@ def upload_file():
             file.save(filepath)
             
             file_url = f"/uploads/{filename}"
-            print(f"✅ Success! File saved to: {filepath}")
             
+            ext = filename.lower().split('.')[-1]
+            if ext in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
+                file_type = 'picture'
+            else:
+                file_type = 'file'
+        
             payload = {
                 'user': user,
                 'file_url': file_url,
@@ -66,7 +68,7 @@ def upload_file():
             return {'success': True}
             
     except Exception as e:
-        print(f"❌ CRITICAL UPLOAD ERROR: {str(e)}")
+        print(f"❌ UPLOAD ERROR: {str(e)}")
         return {'error': str(e)}, 500
 
 @app.route('/uploads/<filename>')
