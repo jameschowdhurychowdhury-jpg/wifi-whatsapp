@@ -10,17 +10,16 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'home_wifi_secret_key'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
+# Create the root level uploads folder if missing
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Added explicit cors and engine configurations for Render stability
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# FIXED: Standardized payload keys to always use 'message'
 @socketio.on('send_message')
 def handle_message(data):
     print(f"📥 Received Text: {data}")
@@ -52,6 +51,7 @@ def upload_file():
             
             file_url = f"/uploads/{filename}"
             
+            # File classification step
             ext = filename.lower().split('.')[-1]
             if ext in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
                 file_type = 'picture'

@@ -30,7 +30,7 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
-        /* Custom Dark Mode Styling Rules */
+        /* Dark Mode Interface Environment Styling */
         body.dark-mode {
             background-color: #121212 !important;
             color: #ffffff !important;
@@ -93,11 +93,10 @@
     </div>
 
     <script>
-        // Connect allowing automated transport fallbacks over proxy paths
         const socket = io({ transports: ['websocket', 'polling'] });
         const chatWindow = document.getElementById('chat-window');
 
-        // FIXED: Reading data.message parameter cleanly
+        // Receive standard chat text entries
         socket.on('receive_message', function(data) {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
@@ -106,15 +105,18 @@
             chatWindow.scrollTop = chatWindow.scrollHeight;
         });
 
-        // FIXED: Renders download buttons perfectly for documents
+        // 📥 RECEIVE FILES & ADD DOWNLOAD OPTION AUTOMATICALLY
         socket.on('receive_file', function(data) {
             const msgDiv = document.createElement('div');
             msgDiv.className = 'message';
             
             let assetHTML = '';
             if (data.type === 'picture') {
-                assetHTML = '<br><img src="' + data.file_url + '" class="img-fluid rounded mt-2" style="max-height: 200px; border: 1px solid #ddd;">';
+                // If it's an image file, showcase a clean visual preview thumbnail frame
+                assetHTML = '<br><img src="' + data.file_url + '" class="img-fluid rounded mt-2" style="max-height: 200px; border: 1px solid #ddd;">' +
+                            '<br><a href="' + data.file_url + '" target="_blank" class="btn btn-sm btn-dark mt-2 text-white" download><i class="fas fa-download"></i> Download Image</a>';
             } else {
+                // 🌟 THIS GENERATES YOUR DOWNLOAD/OPEN OPTION BUTTON FOR DOCUMENTS, PDFs, ZIPs, ETC.
                 assetHTML = '<br><a href="' + data.file_url + '" target="_blank" class="btn btn-sm btn-primary mt-2 text-white" download><i class="fas fa-download"></i> Open & Download ' + data.filename + '</a>';
             }
 
@@ -128,7 +130,6 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        // FIXED: Emitting data using matching 'message' key
         function sendMessage() {
             const user = document.getElementById('username').value || 'Anonymous';
             const text = document.getElementById('message-input').value.trim();
@@ -138,6 +139,7 @@
             }
         }
 
+        // Processing Upload Transmission Pipelines via HTTP POST
         document.getElementById('upload-btn').addEventListener('click', function() {
             const fileInput = document.getElementById('file-input');
             const uploadBtn = document.getElementById('upload-btn');
@@ -162,13 +164,14 @@
                     alert("Error processing upload payload structure.");
                 }
             })
-            .catch(err => console.error("Upload error:", err))
+            .catch(err => console.error("Upload process error caught:", err))
             .finally(() => {
                 uploadBtn.disabled = false;
                 uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
             });
         });
 
+        // Theme Toggle Functionality Engine
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         const themeText = document.getElementById('theme-text');
